@@ -1,0 +1,9 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "Chat.Common.Packet.Data.Client";
+
+message ClientStartChat {
+	repeated uint32 user_ids = 1;
+	bool is_secret = 2;
+	optional string name = 3;
+}

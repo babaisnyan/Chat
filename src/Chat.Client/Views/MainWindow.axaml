@@ -1,0 +1,217 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+        xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+        xmlns:iac="clr-namespace:Avalonia.Xaml.Interactions.Custom;assembly=Avalonia.Xaml.Interactions.Custom"
+        xmlns:v="using:Chat.Client.Views"
+        xmlns:vm="using:Chat.Client.ViewModels"
+        xmlns:m="using:Chat.Client.Models"
+        xmlns:conv="using:Chat.Client.Data.Converters"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:data="clr-namespace:Chat.Client.Data"
+        mc:Ignorable="d" Width="800" Height="500"
+        x:Class="Chat.Client.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Chat" CanResize="False" ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome" ExtendClientAreaTitleBarHeightHint="-1"
+        Background="#17212B">
+
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainWindowViewModel IsLogined="True">
+            <vm:MainWindowViewModel.SelectedChannel>
+                <m:Channel Name="Test" />
+            </vm:MainWindowViewModel.SelectedChannel>
+        </vm:MainWindowViewModel>
+    </Design.DataContext>
+
+    <Window.Resources>
+        <conv:TimeConverter x:Key="timeConverter" />
+        <conv:MessagePositionConverter x:Key="messageConverter" />
+    </Window.Resources>
+
+    <Window.Styles>
+        <Style Selector="Image.TopBarButton">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Stretch" Value="Fill" />
+            <Setter Property="Width" Value="20" />
+            <Setter Property="Height" Value="20" />
+        </Style>
+        <Style Selector="Grid.CloseButton:pointerover">
+            <Setter Property="Background" Value="#E92539" />
+        </Style>
+        <Style Selector="Grid.MinButton:pointerover">
+            <Setter Property="Background" Value="#2C3847" />
+        </Style>
+
+        <Style Selector="TextBox.Account">
+            <Setter Property="Margin" Value="0,10" />
+            <Setter Property="Width" Value="200" />
+        </Style>
+
+        <Style Selector="Button">
+            <Setter Property="Foreground" Value="SkyBlue" />
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+
+    </Window.Styles>
+
+    <i:Interaction.Behaviors>
+        <ia:DataTriggerBehavior Binding="{Binding LoginMessage.Type}" ComparisonCondition="Equal" Value="1">
+            <ia:ChangePropertyAction TargetObject="LoginMessage" PropertyName="Foreground" Value="Red" />
+        </ia:DataTriggerBehavior>
+        <ia:DataTriggerBehavior Binding="{Binding LoginMessage.Type}" ComparisonCondition="Equal" Value="0">
+            <ia:ChangePropertyAction TargetObject="LoginMessage" PropertyName="Foreground" Value="Green" />
+        </ia:DataTriggerBehavior>
+    </i:Interaction.Behaviors>
+
+    <StackPanel Width="800">
+        <Grid Name="TopBar" Background="#242F3D" Height="25" PointerPressed="TopBar_OnPointerPressed">
+            <Grid HorizontalAlignment="Right" ColumnDefinitions="25, 25">
+                <Grid Name="MinimizeButton" Classes="MinButton" Width="25" Height="25"
+                      PointerPressed="MinimizeButton_OnPointerPressed" PointerEnter="MinimizeButton_OnPointerEnter"
+                      PointerLeave="MinimizeButton_OnPointerLeave">
+                    <Image Name="MinimizeImage" Classes="TopBarButton" Source="/Assets/Buttons/minimize-button.png" />
+                </Grid>
+                <Grid Name="CloseButton" Column="1" Classes="TopBarButton CloseButton" Width="25" Height="25"
+                      PointerPressed="CloseButton_OnPointerPressed" PointerEnter="CloseButton_OnPointerEnter"
+                      PointerLeave="CloseButton_OnPointerLeave">
+                    <Image Name="CloseImage" Classes="TopBarButton" Source="/Assets/Buttons/close-button.png" />
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <Grid x:Name="LoginPanel" Margin="0,150,0,0" RowDefinitions="*,*,*,*" HorizontalAlignment="Center"
+              IsVisible="{Binding !IsLogined}">
+            <TextBlock Name="LoginMessage" Foreground="Red" FontWeight="Bold" Text="{Binding LoginMessage.Message}"
+                       HorizontalAlignment="Center"
+                       Margin="15,0,0,0" />
+            <WrapPanel Grid.Row="1">
+                <Image Source="/Assets/Icons/username.png" Width="25" Margin="0,0,5,0" />
+                <TextBox Name="UserName" Classes="Account" Text="{Binding Username}" />
+            </WrapPanel>
+            <WrapPanel Grid.Row="2">
+                <Image Source="/Assets/Icons/password.png" Width="25" Margin="0,0,5,0" />
+                <TextBox Name="Password" Classes="Account" PasswordChar="●" Text="{Binding Password}" />
+            </WrapPanel>
+            <WrapPanel Grid.Row="3" Margin="25,0">
+                <Button Name="LoginButton" Content="로그인" Margin="20,0,0,0"
+                        Command="{Binding LoginCommand}" />
+                <Button Name="RegisterButton" Content="회원가입" Margin="20,0,0,0"
+                        Command="{Binding RegisterCommand}" />
+            </WrapPanel>
+
+        </Grid>
+
+        <Grid x:Name="MainPanel" ColumnDefinitions="200,*" Width="800" Height="475" Background="#0E1621"
+              IsVisible="{Binding IsLogined}">
+            <Grid RowDefinitions="35, *" Background="#17212B">
+                <Grid ColumnDefinitions="30, *" Margin="5">
+                    <Grid Name="MenuButton" HorizontalAlignment="Center" VerticalAlignment="Center"
+                          PointerEnter="MenuButton_OnPointerEnter" PointerLeave="MenuButton_OnPointerLeave" PointerPressed="MenuButton_OnPointerPressed">
+                        <Image Name="MenuImage" Source="/Assets/Buttons/edit.png" />
+                    </Grid>
+                    <TextBox Name="SearchTextBox" Grid.Column="1" Background="#242F3D" BorderThickness="0"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center" Margin="5" Width="150" Text="{Binding SearchTerm}" />
+                </Grid>
+                <ScrollViewer Grid.Row="1" VerticalAlignment="Top" VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Hidden" Margin="5"
+                              IsVisible="{Binding SearchTerm,Converter={x:Static StringConverters.IsNullOrEmpty}}">
+                    <ListBox Name="ChannelList" SelectedIndex="-1">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="#E9E9E9" />
+                                    <TextBlock Text="{Binding Description}" Foreground="#497EB5" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </ScrollViewer>
+                <ScrollViewer Grid.Row="1" VerticalAlignment="Top" VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Hidden" Margin="5"
+                              IsVisible="{Binding SearchTerm, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                    <ListBox Name="SearchUserList" SelectedIndex="-1">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Name="UserInfoItem" HorizontalAlignment="Stretch">
+                                    <StackPanel.ContextMenu>
+                                        <ContextMenu Name="UserInfoContextMenu" PlacementMode="Pointer">
+                                            <MenuItem Name="ShowUserInfo" Header="정보 보기"
+                                                      PointerPressed="ShowUserInfo_OnPointerPressed">
+                                                <MenuItem.Icon>
+                                                    <Image Source="/Assets/Icons/info.png" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                        </ContextMenu>
+                                    </StackPanel.ContextMenu>
+
+                                    <TextBlock Text="{Binding Nickname}" FontWeight="Bold" Foreground="#E9E9E9" />
+                                    <TextBlock Text="{Binding Username}" Foreground="#497EB5" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </ScrollViewer>
+            </Grid>
+            <Grid Column="1" RowDefinitions="35, *, 30">
+                <Label Grid.Row="0" Grid.RowSpan="3" Content="대화할 방을 선택하세요." VerticalAlignment="Center"
+                       HorizontalAlignment="Center"
+                       IsVisible="{Binding SelectedChannel, Converter={x:Static ObjectConverters.IsNull}}" />
+                <Grid Grid.Row="0" Background="#17212B" HorizontalAlignment="Stretch"
+                      IsVisible="{Binding SelectedChannel, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <WrapPanel IsVisible="{Binding IsPlayingMusic}" HorizontalAlignment="Left"
+                               VerticalAlignment="Top">
+                        <Grid>
+                            <Image Name="PlayButton" IsVisible="{Binding IsMusicPaused}"
+                                   Source="/Assets/Buttons/play.png" PointerPressed="PlayButton_OnPointerPressed" />
+                            <Image Name="PauseButton" IsVisible="{Binding !IsMusicPaused}"
+                                   Source="/Assets/Buttons/pause.png" PointerPressed="PauseButton_OnPointerPressed" />
+                        </Grid>
+                        <Slider Name="PositionSlider" Maximum="{Binding MusicLength}" Value="{Binding MusicPosition}"
+                                Width="330"
+                                VerticalAlignment="Center" Margin="10,0" Padding="0,0,0,20" />
+                        <Label Content="{Binding MusicPosition, Converter={StaticResource timeConverter}}"
+                               VerticalContentAlignment="Center" FontFamily="나눔고딕" />
+                        <Label Content="/" VerticalContentAlignment="Center" FontFamily="나눔고딕" />
+                        <Label Content="{Binding MusicLength, Converter={StaticResource timeConverter}}"
+                               VerticalContentAlignment="Center" FontFamily="나눔고딕" />
+                        <Slider Name="VolumeSlider" Maximum="100" Value="{Binding MusicVolume}" Width="100"
+                                VerticalAlignment="Center" Margin="10,0" Padding="0,0,0,20" />
+                    </WrapPanel>
+                </Grid>
+                <ScrollViewer Grid.Row="1" x:Name="ChatScrollViewer" IsVisible="{Binding SelectedChannel, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <StackPanel Background="#0E1621">
+                        <ItemsControl Items="{Binding CurrentMessages}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <v:ChatMessage x:Name="ChatMessage" Margin="10,5"
+                                                   HorizontalAlignment="{Binding Converter={StaticResource messageConverter}}"
+                                                   DataContext="{Binding}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+                <Grid Name="TextBoxGrid" Row="2" ColumnDefinitions="30, *"
+                      IsVisible="{Binding SelectedChannel, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <Grid Name="AttachButton" HorizontalAlignment="Center" VerticalAlignment="Center"
+                          PointerEnter="AttachButton_OnPointerEnter" PointerLeave="AttachButton_OnPointerLeave">
+                        <Image Name="AttachImage" Source="/Assets/Buttons/attach.png"
+                               PointerPressed="AttachImage_OnPointerPressed" />
+                    </Grid>
+                    <TextBox Grid.Column="1" BorderThickness="0" Background="#17212B" Text="{Binding ChatMessage}">
+                        <TextBox.KeyBindings>
+                            <KeyBinding Gesture="Enter" Command="{Binding SendMessageCommand}" />
+                        </TextBox.KeyBindings>
+                    </TextBox>
+                </Grid>
+            </Grid>
+        </Grid>
+    </StackPanel>
+</Window>
